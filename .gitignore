@@ -1,0 +1,10 @@
+#
+# Eclipse files
+#
+.settings/
+.classpath
+.project
+.build/
+#
+#
+.idea
