@@ -5,7 +5,7 @@
  * Date: 4 лют. 2014
  */
 
-package com.juriy.mbeans;
+package com.cs.mbeans;
 
 public interface ServerControllerMBean{
   public int getCorePoolSize();

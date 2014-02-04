@@ -1,4 +1,4 @@
-package com.juriy.mbeans;
+package com.cs.mbeans;
 
 /**
  * Copyright (c) 2013-2014 Abakus, Inc. All rights reserved.
@@ -6,7 +6,7 @@ package com.juriy.mbeans;
  * Date: 4 лют. 2014
  */
 
-import com.juriy.server.*;
+import com.cs.server.*;
 
 public class ServerController implements ServerControllerMBean {
   private TestServer server;

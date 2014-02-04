@@ -4,9 +4,10 @@
  * Date: 2014-02-04
  */
 
-package com.juriy.server;
+package com.cs.server;
 
-import com.juriy.mbeans.*;
+import com.cs.mbeans.*;
+
 import javax.management.*;
 import java.util.concurrent.*;
 import java.util.*;
@@ -71,7 +72,7 @@ public class TestServer {
 
         ServerController serverController = new ServerController(server);
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        ObjectName name = new ObjectName("com.juriy.mbeans:type=ServerController");
+        ObjectName name = new ObjectName("com.cs.mbeans:type=ServerController");
         mbs.registerMBean(serverController, name);
 
         
