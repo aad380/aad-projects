@@ -73,6 +73,7 @@ public class TestServer {
         ServerController serverController = new ServerController(server);
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = new ObjectName("com.cs.mbeans:type=ServerController");
+//        ObjectName name = new ObjectName("zuka:type=Buka,side=scalene,name=1");
         mbs.registerMBean(serverController, name);
 
         
