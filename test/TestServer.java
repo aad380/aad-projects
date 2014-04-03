@@ -5,6 +5,10 @@
  * Date: 2014-02-04
  */
 
+/*
+Some test comment
+*/
+
 package com.cs.server;
 
 import com.cs.mbeans.*;
