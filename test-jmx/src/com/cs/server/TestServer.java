@@ -2,14 +2,6 @@
  * Copyright (c) 2013-2014 Abakus, Inc. All rights reserved.
  * User: Alexander Dudarenko
  * Date: 2014-02-04
- */
-/*
- * 222 merge comment test
- * 111 merge comment test
- *  * Copyright (c) 2013-2014 Abakus, Inc. All rights reserved.
- * User: Alexander Dudarenko
- * Date: 2014-02-04
-*
 */
 
 package com.cs.server;
