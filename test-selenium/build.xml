@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<project name="selenium" default="jar">	
+		
+    <path id="compile.classpath">
+        <fileset dir="lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+	
+    <target name="init">
+        <mkdir dir="build/classes"/>
+        <mkdir dir="dist"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="dist"/>
+        <delete dir="build"/>
+    </target>
+	
+    <target name="compile" depends="clean, init">
+        <javac destdir="build/classes" debug="true" srcdir="jsrc">
+            <classpath refid="compile.classpath"/>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar destfile="dist/ui-tests.jar" basedir="build/classes"/>
+    </target>
+	
+</project>
