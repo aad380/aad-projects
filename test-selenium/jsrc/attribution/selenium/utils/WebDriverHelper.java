@@ -36,6 +36,7 @@ public class WebDriverHelper {
 System.err.println("wait: <" +by+ ">");
             try {
               we = driver_.findElement(by);
+System.err.println("   OK");
               break;
             } catch (NoSuchElementException e) {}
             if (seconds > 0) {
@@ -56,6 +57,7 @@ System.err.println("wait: <" +by+ ">");
             for (WebElement e : l) {
 System.err.println("waitByText: <" +by+ "> <" + e.getText() + ">");
                 if (text.equals(e.getText().trim())) {
+System.err.println("   OK");
                     return e;
                 }
             }

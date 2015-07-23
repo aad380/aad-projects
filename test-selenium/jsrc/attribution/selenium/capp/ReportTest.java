@@ -36,6 +36,7 @@ public class ReportTest {
         selectClient("Avis");
         selectCampaign("NL");
         selectSubCampaign("Aug25-Sep21_NL");
+        helper_.waitForReportLoadingStart(10, false);
         helper_.waitForReportLoadingDone(30, false);
 System.err.println("DONE");
         helper_.sleepSeconds(10);
@@ -89,8 +90,8 @@ System.err.println("DONE");
         e = driver_.findElement(By.cssSelector("ul.dropdown-menu a[ng-click=\"saveSelectedClient()\"]"));
         e.click();
         e = helper_.waitForElementByText(By.cssSelector("span#clientName"), 30, clientName);
-        helper_.waitForReportLoadingStart(20, true);
-        helper_.waitForReportLoadingDone(30, true);
+        //helper_.waitForReportLoadingStart(20, true);
+        //helper_.waitForReportLoadingDone(30, true);
     }
 
     private void selectCampaign (String campaignName) {
@@ -102,7 +103,8 @@ System.err.println("DONE CEHCK FOR CAMAIGN: " + campaignName);
         e = helper_.waitForElement(By.cssSelector("a#abakus-active-campaign"), 10);
         e.click();
         helper_.sleepSeconds(2);
-        e = helper_.waitForElementByText(By.cssSelector("ul#abakus-campaigns-dropdown a.tip.ng-binding"), 60, campaignName);
+System.err.println("CLICK");
+        e = helper_.waitForElement(By.cssSelector("ul#abakus-campaigns-dropdown a[data-original-title=\""+campaignName+"\"]"), 100);
         e.click();
         helper_.sleepSeconds(2);
         e = helper_.waitForElementByText(By.cssSelector("a#abakus-active-campaign"), 20, campaignName);
@@ -133,12 +135,12 @@ System.err.println("DONE CEHCK FOR SUB-CAMPAIGN: " + subCampaignName);
         e = helper_.waitForElement(By.cssSelector("a#abakus-cur-subcampaign"), 10);
         e.click();
         helper_.sleepSeconds(2);
-        e = helper_.waitForElementByText(By.cssSelector("ul#abakus-subcampaigns a.tip.ng-binding"), 60, subCampaignName);
+        e = helper_.waitForElement(By.cssSelector("ul#abakus-subcampaigns-dropdown a[data-original-title=\""+subCampaignName+"\"]"), 100);
         e.click();
         helper_.sleepSeconds(2);
         e = helper_.waitForElementByText(By.cssSelector("a#bakus-cur-subcampaign"), 20, subCampaignName);
-        helper_.waitForReportLoadingStart(30, false);
-        helper_.waitForReportLoadingDone(30, true);
+        //helper_.waitForReportLoadingStart(30, false);
+        //helper_.waitForReportLoadingDone(30, true);
     }
 
 
