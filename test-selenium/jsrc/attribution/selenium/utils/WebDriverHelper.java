@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -51,15 +52,25 @@ System.err.println("   OK");
     }
 
     public WebElement waitForElementByText(By by, int seconds, String text) {
-        text = text.trim();
+        text = text.trim().toUpperCase();
         do {
-            List<WebElement> l = driver_.findElements(by);
-            for (WebElement e : l) {
-System.err.println("waitByText: <" +by+ "> <" + e.getText() + ">");
-                if (text.equals(e.getText().trim())) {
+            try {
+                List<WebElement> l = driver_.findElements(by);
+System.err.println("waitByText: size=" +l.size());
+                for (WebElement e : l) {
+                    String elementText = e.getAttribute("textContent");
+                    if (elementText == null || elementText.isEmpty()) {
+                        elementText = e.getAttribute("innerHTML");
+                    }
+System.err.println("waitByText: <" +by+ "> <" + elementText + ">");
+                    //if (text.equals(e.getText().trim().toUpperCase())) {
+                    if (text.equals(elementText.trim().toUpperCase())) {
 System.err.println("   OK");
-                    return e;
+                        return e;
+                    }
                 }
+            } catch (StaleElementReferenceException ex) {
+                continue;
             }
             if (seconds > 0) {
                 try {Thread.sleep(1000L);} catch (InterruptedException ex) {};
@@ -69,20 +80,32 @@ System.err.println("   OK");
         throw new NoSuchElementException("waitForElementByText: Can't find element \"" + by + "\" by text \"" + text + "\"");
     }
 
+    public String getWebElementText(WebElement e) {
+        String elementText = e.getAttribute("textContent");
+        if (elementText == null || elementText.isEmpty()) {
+            elementText = e.getAttribute("innerHTML");
+        }
+        return elementText;
+    }
+
     public void waitForReportLoadingStart(int seconds, boolean throwException) {
         //By by = By.cssSelector("div.progress-striped.progress:visible");
         By by = By.cssSelector("div.progress-striped.progress");
         boolean ok = false;
         LOOP: do {
-            List<WebElement> l = driver_.findElements(by);
-            for (WebElement e : l) {
-                String style = e.getAttribute("style");
+            try {
+                List<WebElement> l = driver_.findElements(by);
+                for (WebElement e : l) {
+                    String style = e.getAttribute("style");
 System.err.println("loadingStart: e=<"+e+"> style=" + style);
-                if (style == null || !style.matches(".*display:\\s*none.*")) {
+                    if (style == null || !style.matches(".*display:\\s*none.*")) {
 System.err.println("     OK: ");
-                    ok = true;
-                    break LOOP;
+                        ok = true;
+                        break LOOP;
+                    }
                 }
+            } catch (StaleElementReferenceException ex) {
+                continue;
             }
             if (seconds > 0) {
                 try {Thread.sleep(1000L);} catch (InterruptedException ex) {};
@@ -98,14 +121,18 @@ System.err.println("     OK: ");
         By by = By.cssSelector("div.progress-striped.progress");
         boolean ok = false;
         do {
-            List<WebElement> l = driver_.findElements(by);
             boolean visible = false;
-            for (WebElement e : l) {
-                String style = e.getAttribute("style");
-                if (style == null || !style.matches(".*display:\\s*none.*")) {
-                    visible = true;
-                    break;
+            try {
+                List<WebElement> l = driver_.findElements(by);
+                for (WebElement e : l) {
+                    String style = e.getAttribute("style");
+                    if (style == null || !style.matches(".*display:\\s*none.*")) {
+                        visible = true;
+                        break;
+                    }
                 }
+            } catch (StaleElementReferenceException ex) {
+                continue;
             }
             if (!visible) {
                 ok = true;
