@@ -1,15 +1,35 @@
 <?xml version="1.0" ?>
 <project name="selenium" default="jar">	
+
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.7"/>
+    <property name="source" value="1.7"/>
+
 		
     <path id="compile.classpath">
         <fileset dir="lib">
             <include name="*.jar"/>
         </fileset>
     </path>
-	
+
+    <path id="tests.classpath">
+        <path refid="compile.classpath"/>
+        <pathelement location="./resources"/>
+        <pathelement location="build/test-classes"/>
+    </path>
+    <taskdef name="testng" classname="org.testng.TestNGAntTask" classpathref="tests.classpath"/>
+
+
     <target name="init">
         <mkdir dir="build/classes"/>
         <mkdir dir="dist"/>
+        <mkdir dir="build/test-classes"/>
+        <mkdir dir="build/test-out"/>
+        <copy includeemptydirs="false" todir="build/classes">
+            <fileset dir="resources">
+                <include name="**/log4j.properties"/>
+            </fileset>
+        </copy>
     </target>
 
     <target name="clean">
@@ -17,7 +37,7 @@
         <delete dir="build"/>
     </target>
 	
-    <target name="compile" depends="clean, init">
+    <target name="compile" depends="clean,init">
         <javac destdir="build/classes" debug="true" srcdir="jsrc">
             <classpath refid="compile.classpath"/>
         </javac>
@@ -26,5 +46,28 @@
     <target name="jar" depends="compile">
         <jar destfile="dist/ui-tests.jar" basedir="build/classes"/>
     </target>
+
+    <target name="compile-tests" depends="init">
+        <echo message="*** Compiling tests ***"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="build/test-classes" includeantruntime="false"
+               source="${source}" target="${target}">
+            <src path="tests"/>
+            <classpath refid="tests.classpath"/>
+            <classpath refid="compile.classpath"/>
+        </javac>
+    </target>
+
+    <target name="runtests" depends="compile-tests">
+        <testng classpathref="tests.classpath"
+                outputDir="test-out"
+                haltOnfailure="true"
+                groups="all"
+                verbose="10"
+                >
+            <classfileset dir="build/test-classes" includes="**/*.class" />
+            <env key="TEST_JOB_ID" value="4040" />
+        </testng>
+    </target>
+
 	
 </project>

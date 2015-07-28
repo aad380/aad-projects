@@ -22,6 +22,140 @@ public class WebDriverHelper {
         this.driver_ = driver;
     }
 
+    public void login (String loginFormUrl, String user, String password) {
+        WebElement e;
+        driver_.get(loginFormUrl);
+        System.out.println("Title: " + driver_.getTitle());
+        // login into abakus
+        e  = driver_.findElement(By.id("user"));
+        e.sendKeys(user);
+        e  = driver_.findElement(By.id("password"));
+        e.sendKeys(password);
+        e  = driver_.findElement(By.id("loginBtn"));
+        e.click();
+    }
+
+    public void logout () {
+        WebElement e;
+        e = waitForElement(By.cssSelector("a[href=\"/j_acegi_logout\"]"), 20);
+        e.click();
+        driver_.close();
+        //driver_.quit();
+    }
+
+    public void selectJob (String client, String campaign, String subCampaign) {
+        selectClient(client, false);
+        selectCampaign(campaign, false);
+        selectSubCampaign(subCampaign, true);
+    }
+
+    public void selectClient (String clientName, boolean waitloading) {
+        WebElement e;
+        e = waitForElement(By.cssSelector("li#profile > a.dropdown-toggle"), 20);
+        e.click();
+        sleepSeconds(1);
+        e = waitForElement(By.cssSelector("input[placeholder=\"Search for Client...\"]"), 20);
+        sleepSeconds(2);
+        boolean clientWasFound = false;
+        for (WebElement div : driver_.findElements(By.cssSelector("div.client-columns div.clientList"))) {
+            try {
+                WebElement span = div.findElement(By.cssSelector("span.ng-binding"));
+                if (clientName.equals(span.getText())) {
+                    WebElement radio = div.findElement(By.cssSelector("input[type=\"radio\"][name=\"clientId\"]"));
+                    radio.click();
+                    clientWasFound = true;
+                    break;
+                }
+            } catch (NoSuchElementException ex) {}
+        }
+        if (!clientWasFound) {
+            throw new NoSuchElementException ("Client '" + clientName + "' was not found.");
+        }
+        e = driver_.findElement(By.cssSelector("ul.dropdown-menu a[ng-click=\"saveSelectedClient()\"]"));
+        e.click();
+        e = waitForElementByText(By.cssSelector("span#clientName"), 30, clientName);
+        if (waitloading) {
+            waitForReportLoadingStart(15, false);
+            waitForReportLoadingDone(60, true);
+        }
+    }
+
+
+    public void selectCampaign (String campaignName, boolean waitloading) {
+        WebElement e;
+System.err.println("CHECK FOR CAMAIGN: " + campaignName);
+        //e = waitForElementByText(By.cssSelector("ul#abakus-campaigns-dropdown a.tip.ng-binding"), 100, campaignName);
+        e = waitForElement(By.cssSelector("ul#abakus-campaigns-dropdown a[data-original-title=\""+campaignName+"\"]"), 100);
+System.err.println("DONE CEHCK FOR CAMAIGN: " + campaignName);
+        e = waitForElement(By.cssSelector("a#abakus-active-campaign"), 10);
+        e.click();
+        sleepSeconds(2);
+System.err.println("CLICK");
+        e = waitForElement(By.cssSelector("ul#abakus-campaigns-dropdown a[data-original-title=\""+campaignName+"\"]"), 100);
+        e.click();
+        e = waitForElementByText(By.cssSelector("a#abakus-active-campaign"), 20, campaignName);
+        if (waitloading) {
+            waitForReportLoadingStart(15, false);
+            waitForReportLoadingDone(120, true);
+        }
+    }
+
+    public void selectSubCampaign (String subCampaignName, boolean waitloading) {
+        WebElement e;
+System.err.println("CHECK FOR SUB-CAMPAIGN: " + subCampaignName);
+        //e = waitForElementByText(By.cssSelector("ul#abakus-campaigns-dropdown a.tip.ng-binding"), 100, campaignName);
+        e = waitForElement(By.cssSelector("ul#abakus-subcampaigns-dropdown a[data-original-title=\""+subCampaignName+"\"]"), 100);
+System.err.println("DONE CEHCK FOR SUB-CAMPAIGN: " + subCampaignName);
+        e = waitForElement(By.cssSelector("a#abakus-cur-subcampaign"), 10);
+        e.click();
+        sleepSeconds(2);
+        e = waitForElement(By.cssSelector("ul#abakus-subcampaigns-dropdown a[data-original-title=\""+subCampaignName+"\"]"), 100);
+        e.click();
+        e = waitForElementByText(By.cssSelector("a#abakus-cur-subcampaign"), 20, subCampaignName);
+        if (waitloading) {
+            waitForReportLoadingStart(15, false);
+            waitForReportLoadingDone(120, true);
+        }
+    }
+
+    public void selectReport (String reportName,  boolean waitLoading) {
+        reportName = reportName.trim();
+        WebElement e;
+System.err.println("CHECK FOR REPORT: " + reportName);
+        e = waitForElementByText(By.cssSelector("nav#mainnav li.hasSub.ng-scope span.txt"), 100, reportName);
+System.err.println("DONE CEHCK FOR REPORT: " + reportName);
+        WebElement menuGroup = null;
+        WebElement menuItem = null;
+        LOOP: for (WebElement li : driver_.findElements(By.cssSelector("nav#mainnav li.hasSub.ng-scope"))) {
+            for (WebElement span : li.findElements(By.cssSelector("span.txt"))) {
+                if (reportName.equalsIgnoreCase(getWebElementText(span).trim())) {
+                    menuGroup = li;
+                    menuItem = span;
+                    break LOOP;
+                }
+            }
+        }
+        if (menuItem == null) {
+            throw new NoSuchElementException("selectReport: Can't find report \"" + reportName + "\"");
+        }
+System.err.println ("REPORT WAS FOUND: " + menuItem);
+        e = menuGroup.findElement(By.cssSelector("ul.sub"));
+        String menuGroupStyle = e.getAttribute("style");
+        if (menuGroupStyle.matches(".*overflow:\\s*hidden.*")) {
+System.err.println ("  OPEN MENU: ");
+            WebElement a = menuGroup.findElement(By.cssSelector("a[ng-click*=\"toggleIsHidden\"]"));
+System.err.println ("          A: " + a);
+            a.click();
+            sleepSeconds(2);
+        }
+        menuItem.click();
+        sleepSeconds(5);
+        if (waitLoading) {
+            waitForReportLoadingStart(15, false);
+            waitForReportLoadingDone(120, true);
+        }
+    }
+
     public boolean isElementPresent(By by) {
         try {
           driver_.findElement(by);

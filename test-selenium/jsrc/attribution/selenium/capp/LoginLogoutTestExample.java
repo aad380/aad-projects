@@ -14,9 +14,9 @@ import attribution.selenium.utils.WebDriverHelper;
  * Date: 7/22/2015
  */
 
-public class LoginLogout {
+public class LoginLogoutTestExample {
 
-    public LoginLogout() {
+    public LoginLogoutTestExample() {
         // TODO Auto-generated constructor stub
     }
     
