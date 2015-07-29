@@ -2,6 +2,7 @@ package attribution.selenium.utils;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -16,6 +17,8 @@ import org.openqa.selenium.WebElement;
  */
 public class WebDriverHelper {
 
+    private static final Logger LOGGER = Logger.getLogger(WebDriverHelper.class);
+
     private WebDriver driver_;
 
     public WebDriverHelper(WebDriver driver) {
@@ -25,7 +28,7 @@ public class WebDriverHelper {
     public void login (String loginFormUrl, String user, String password) {
         WebElement e;
         driver_.get(loginFormUrl);
-        System.out.println("Title: " + driver_.getTitle());
+        LOGGER.debug("Title: " + driver_.getTitle());
         // login into abakus
         e  = driver_.findElement(By.id("user"));
         e.sendKeys(user);
@@ -83,14 +86,14 @@ public class WebDriverHelper {
 
     public void selectCampaign (String campaignName, boolean waitloading) {
         WebElement e;
-System.err.println("CHECK FOR CAMAIGN: " + campaignName);
+        LOGGER.debug("CHECK FOR CAMAIGN: " + campaignName);
         //e = waitForElementByText(By.cssSelector("ul#abakus-campaigns-dropdown a.tip.ng-binding"), 100, campaignName);
         e = waitForElement(By.cssSelector("ul#abakus-campaigns-dropdown a[data-original-title=\""+campaignName+"\"]"), 100);
-System.err.println("DONE CEHCK FOR CAMAIGN: " + campaignName);
+        LOGGER.debug("DONE CEHCK FOR CAMAIGN: " + campaignName);
         e = waitForElement(By.cssSelector("a#abakus-active-campaign"), 10);
         e.click();
         sleepSeconds(2);
-System.err.println("CLICK");
+        LOGGER.debug("CLICK");
         e = waitForElement(By.cssSelector("ul#abakus-campaigns-dropdown a[data-original-title=\""+campaignName+"\"]"), 100);
         e.click();
         e = waitForElementByText(By.cssSelector("a#abakus-active-campaign"), 20, campaignName);
@@ -102,10 +105,10 @@ System.err.println("CLICK");
 
     public void selectSubCampaign (String subCampaignName, boolean waitloading) {
         WebElement e;
-System.err.println("CHECK FOR SUB-CAMPAIGN: " + subCampaignName);
+        LOGGER.debug("CHECK FOR SUB-CAMPAIGN: " + subCampaignName);
         //e = waitForElementByText(By.cssSelector("ul#abakus-campaigns-dropdown a.tip.ng-binding"), 100, campaignName);
         e = waitForElement(By.cssSelector("ul#abakus-subcampaigns-dropdown a[data-original-title=\""+subCampaignName+"\"]"), 100);
-System.err.println("DONE CEHCK FOR SUB-CAMPAIGN: " + subCampaignName);
+        LOGGER.debug("DONE CEHCK FOR SUB-CAMPAIGN: " + subCampaignName);
         e = waitForElement(By.cssSelector("a#abakus-cur-subcampaign"), 10);
         e.click();
         sleepSeconds(2);
@@ -121,9 +124,9 @@ System.err.println("DONE CEHCK FOR SUB-CAMPAIGN: " + subCampaignName);
     public void selectReport (String reportName,  boolean waitLoading) {
         reportName = reportName.trim();
         WebElement e;
-System.err.println("CHECK FOR REPORT: " + reportName);
+        LOGGER.debug("CHECK FOR REPORT: " + reportName);
         e = waitForElementByText(By.cssSelector("nav#mainnav li.hasSub.ng-scope span.txt"), 100, reportName);
-System.err.println("DONE CEHCK FOR REPORT: " + reportName);
+        LOGGER.debug("DONE CEHCK FOR REPORT: " + reportName);
         WebElement menuGroup = null;
         WebElement menuItem = null;
         LOOP: for (WebElement li : driver_.findElements(By.cssSelector("nav#mainnav li.hasSub.ng-scope"))) {
@@ -138,13 +141,13 @@ System.err.println("DONE CEHCK FOR REPORT: " + reportName);
         if (menuItem == null) {
             throw new NoSuchElementException("selectReport: Can't find report \"" + reportName + "\"");
         }
-System.err.println ("REPORT WAS FOUND: " + menuItem);
+        LOGGER.debug("REPORT WAS FOUND: " + menuItem);
         e = menuGroup.findElement(By.cssSelector("ul.sub"));
         String menuGroupStyle = e.getAttribute("style");
         if (menuGroupStyle.matches(".*overflow:\\s*hidden.*")) {
-System.err.println ("  OPEN MENU: ");
+            LOGGER.debug("OPEN MENU: ");
             WebElement a = menuGroup.findElement(By.cssSelector("a[ng-click*=\"toggleIsHidden\"]"));
-System.err.println ("          A: " + a);
+            LOGGER.debug("   A: " + a);
             a.click();
             sleepSeconds(2);
         }
@@ -168,10 +171,10 @@ System.err.println ("          A: " + a);
     public WebElement waitForElement(By by, int seconds) {
         WebElement we = null;
         do {
-System.err.println("wait: <" +by+ ">");
+            LOGGER.debug("wait: <" +by+ ">");
             try {
               we = driver_.findElement(by);
-System.err.println("   OK");
+            LOGGER.debug("   OK");
               break;
             } catch (NoSuchElementException e) {}
             if (seconds > 0) {
@@ -190,16 +193,16 @@ System.err.println("   OK");
         do {
             try {
                 List<WebElement> l = driver_.findElements(by);
-System.err.println("waitByText: size=" +l.size());
+                LOGGER.debug("waitByText: size=" +l.size());
                 for (WebElement e : l) {
                     String elementText = e.getAttribute("textContent");
                     if (elementText == null || elementText.isEmpty()) {
                         elementText = e.getAttribute("innerHTML");
                     }
-System.err.println("waitByText: <" +by+ "> <" + elementText + ">");
-                    //if (text.equals(e.getText().trim().toUpperCase())) {
-                    if (text.equals(elementText.trim().toUpperCase())) {
-System.err.println("   OK");
+                    elementText = elementText.trim();
+                    LOGGER.debug("waitByText: <" +by+ "> <" + elementText + ">");
+                    if (text.equals(elementText.toUpperCase())) {
+                        LOGGER.debug("   OK");
                         return e;
                     }
                 }
@@ -222,6 +225,21 @@ System.err.println("   OK");
         return elementText;
     }
 
+    public int getWebElementInteger(WebElement e) {
+        String text = getWebElementText(e).trim().replaceAll(",", "");
+        return Integer.parseInt(text);
+    }
+
+    public long getWebElementLong(WebElement e) {
+        String text = getWebElementText(e).trim().replaceAll(",", "");
+        return Long.parseLong(text);
+    }
+
+    public double getWebElementDouble(WebElement e) {
+        String text = getWebElementText(e).trim().replaceAll(",", "");
+        return Double.parseDouble(text);
+    }
+
     public void waitForReportLoadingStart(int seconds, boolean throwException) {
         //By by = By.cssSelector("div.progress-striped.progress:visible");
         By by = By.cssSelector("div.progress-striped.progress");
@@ -231,9 +249,9 @@ System.err.println("   OK");
                 List<WebElement> l = driver_.findElements(by);
                 for (WebElement e : l) {
                     String style = e.getAttribute("style");
-System.err.println("loadingStart: e=<"+e+"> style=" + style);
+                    LOGGER.debug("loadingStart: e=<"+e+"> style=" + style);
                     if (style == null || !style.matches(".*display:\\s*none.*")) {
-System.err.println("     OK: ");
+                        LOGGER.debug("     OK: ");
                         ok = true;
                         break LOOP;
                     }

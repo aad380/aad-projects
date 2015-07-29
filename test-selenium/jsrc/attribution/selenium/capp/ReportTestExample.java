@@ -45,22 +45,23 @@ public class ReportTestExample {
     }
 
     public void run (String client, String campaign, String subCampaign) {
+        LOGGER.info("LOGIN TO SITE");
         helper_.login(loginFormUrl_, user_, password_);
         helper_.waitForReportLoadingStart(30, false);
         helper_.waitForReportLoadingDone(120, true);
-
+        LOGGER.info("SELECT JOB");
         helper_.selectJob(client, campaign, subCampaign);
-
         //selectReport("Path Analysis", true);
 //        selectReport("Player Attribution", false);
 //        selectReport("Attribution Summary", false);
 
+        LOGGER.info("CHECK REPORT: Attribution Summary");
         checkAttributionSummary();
+        LOGGER.info("CHECK REPORT: Player Attribution");
         checkPlayerAttribution();
+        LOGGER.info("CHECK REPORT: Player Efficiency");
         checkPlayerEfficiency();
-
-System.err.println("DONE");
-
+        LOGGER.info("DONE");
         helper_.sleepSeconds(30);
         // done
         helper_.logout();
@@ -70,42 +71,65 @@ System.err.println("DONE");
         helper_.selectReport("Attribution Summary", true);
         WebElement table = driver_.findElement(By.cssSelector("table#table.table.dataTable"));
         if (table == null) {
-            throw new NoSuchElementException("checkAttributionReport: cant't find datatable.");
+            throw new NoSuchElementException("checkAttributionSummaryReport: cant't find datatable.");
         }
+        WebElement e;
         // check all converters
-        WebElement allConvertersElement = table.findElement(By.xpath(".//thead/tr[2]/th"));
-        if (allConvertersElement == null) {
-            throw new NoSuchElementException("checkAttributionReport: cant't find allConverters element.");
+        e = table.findElement(By.xpath(".//thead/tr[2]/th"));
+        if (e == null) {
+            throw new NoSuchElementException("checkAttributionSummaryReport: cant't find allConverters element.");
         }
-        String allConvertersString = helper_.getWebElementText(allConvertersElement).trim().replaceAll(",", "");
-        long allConverters = Long.parseLong(allConvertersString);
-        if (allConverters != 11219L) {
-            throw new RuntimeException("checkAttributionReport: incorrect all converters value.");
+        int allConverters = helper_.getWebElementInteger(e);
+        if (allConverters != 11219) {
+            throw new RuntimeException("checkAttributionSummaryReport: incorrect all converters value.");
         }
         // check attributed converters
-        WebElement attributedConvertersElement = table.findElement(By.xpath(".//tbody/tr/td[1]"));
-        if (attributedConvertersElement == null) {
-            throw new NoSuchElementException("checkAttributionReport: cant't find attributedConverters element.");
+        e = table.findElement(By.xpath(".//tbody/tr/td[1]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkAttributionSummaryReport: cant't find attributedConverters element.");
         }
-        String attributedConvertersString = helper_.getWebElementText(attributedConvertersElement).trim().replaceAll(",", "");
-        long attributedConverters = Long.parseLong(attributedConvertersString);
-        if (attributedConverters != 211L) {
-            throw new RuntimeException("checkAttributionReport: incorrect attributed converters value.");
+        int attributedConverters = helper_.getWebElementInteger(e);
+        if (attributedConverters != 211) {
+            throw new RuntimeException("checkAttributionSummaryReport: incorrect attributed converters value.");
         }
         // check baseline converters
-        WebElement baselineConvertersElement = table.findElement(By.xpath(".//tbody/tr/td[2]"));
-        if (baselineConvertersElement == null) {
-            throw new NoSuchElementException("checkAttributionReport: cant't find baselineConverters element.");
+        e = table.findElement(By.xpath(".//tbody/tr/td[2]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkAttributionSummaryReport: cant't find baselineConverters element.");
         }
-        String baselineConvertersString = helper_.getWebElementText(baselineConvertersElement).trim().replaceAll(",", "");
-        long baselineConverters = Long.parseLong(baselineConvertersString);
-        if (baselineConverters != 11008L) {
-            throw new RuntimeException("checkAttributionReport: incorrect baseline converters value.");
+        int baselineConverters = helper_.getWebElementInteger(e);
+        if (baselineConverters != 11008) {
+            throw new RuntimeException("checkAttributionSummaryReport: incorrect baseline converters value.");
+        }
+        if (allConverters != attributedConverters + baselineConverters) {
+            throw new RuntimeException("checkAttributionSummaryReport: allConverters("+allConverters+") != attributedConverters("+attributedConverters+") + baselineConverters("+baselineConverters+")");
         }
     }
 
     public void checkPlayerAttribution () {
+        /* pathes for tables
+            xpath: //div[@id='table_wrapper']/div[4]/div/div/table/thead/tr[3]/td[2]
+            css: "div#table_wrapper div.dataTables_scrollHeadInner table.dataTable"
+            xpath://table[@id='table']/tbody/tr[2]/td[2]
+            css: div#table_wrapper div.dataTables_scrollBody table.dataTable
+        */
         helper_.selectReport("Player Attribution", true);
+        WebElement top_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollHeadInner table.dataTable"), 20);
+        if (top_table == null) {
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find top_table.");
+        }
+        WebElement bottom_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollBody table.dataTable"), 20);
+        if (bottom_table == null) {
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find bottom_table.");
+        }
+        WebElement e = top_table.findElement(By.xpath(".//thead/tr[3]/td[2]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find allPlayersTotal element.");
+        }
+        double allPlayersTotal = helper_.getWebElementDouble(e);
+        if (allPlayersTotal != 211.0) {
+            throw new RuntimeException("checkPlayersAttributionReport: incorrect allPlayersTotal value.");
+        }
     }
 
     public void checkPlayerEfficiency () {
@@ -114,12 +138,11 @@ System.err.println("DONE");
 
     public static void main(String[] args) {
         ReportTestExample rt = new ReportTestExample (CAPP_LOGIN_FORM_URL, CAPP_USER, CAPP_PASSWORD);
-        System.out.println("Start");
+        LOGGER.info("START TESTS");
         //rt.run("Avis", "NL", "Aug25-Sep21_NL");
         //rt.run("Avis", "UK", "May05-May18_UK");
         //rt.run("Avis", "UK", "Sep15-Sep28_UK");
         rt.run("Quantcast", "Careers", "Jul 01-Jul 31, 2014");
-        System.out.println("Done");
     }
 
 }
