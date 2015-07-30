@@ -25,7 +25,7 @@ public class ReportTestExample {
     //public static String CAPP_LOGIN_URL = "https://localhost:8043/login";
     public static String CAPP_LOGIN_FORM_URL = "https://ec2-54-67-77-250.us-west-1.compute.amazonaws.com/login";
     public static String CAPP_USER = "alexander.dudarenko@abakus.me";
-    public static String CAPP_PASSWORD = "is7edGien";
+    public static String CAPP_PASSWORD = "welcome";
 
     private WebDriver driver_;
     private WebDriverHelper helper_;
