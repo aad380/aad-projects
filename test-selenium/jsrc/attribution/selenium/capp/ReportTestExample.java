@@ -1,6 +1,16 @@
 
 package attribution.selenium.capp;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -30,9 +40,78 @@ public class ReportTestExample {
     private WebDriver driver_;
     private WebDriverHelper helper_;
     
+    // login parameters
     private String loginFormUrl_;
     private String user_;
     private String password_;
+
+    private File configFile_;
+    private boolean isLogged_ = false;
+    TestSteps steps_;
+
+    public static class TestSteps implements Iterable<TestSteps.Step> {
+        
+        public static class Step {
+
+            private String name_;
+            private String[] args_;
+            
+            public Step (String name, String[] args) {
+                name_ = name;
+                args_ = args;
+            }
+
+            public String getName() {
+                return name_;
+            }
+
+            public String[] getArgs() {
+                return args_;
+            }
+            
+        }
+
+        private List<Step> steps_;
+
+        public TestSteps () {
+            steps_ = new ArrayList<>();
+        }
+        
+        public void addStep(Step step) {
+            steps_.add(step);
+        }
+
+        public Step getStep(int i) {
+            return steps_.get(i);
+        }
+
+        public int size() {
+            return steps_.size();
+        }
+        
+        @Override
+        public Iterator<Step> iterator() {
+            return steps_.iterator();
+        }
+
+    }
+
+    public ReportTestExample (String configFileName) {
+        steps_ = new TestSteps();
+        configFile_ = new File(configFileName);
+        try (BufferedReader reader = new BufferedReader(new FileReader(configFile_))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] cols = line.split("\\|", 0);
+                if (cols.length < 1) {
+                    throw new RuntimeException("Incorrect line: " + line);
+                }
+                steps_.addStep(new TestSteps.Step(cols[0], Arrays.copyOfRange(cols, 1, cols.length)));
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     public ReportTestExample (String loginFormUrl, String user, String password) {
         loginFormUrl_ = loginFormUrl;
@@ -137,6 +216,10 @@ public class ReportTestExample {
     }
 
     public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Usage: ReportTester PARAMETERS-FILE");
+            System.exit(1);
+        }
         ReportTestExample rt = new ReportTestExample (CAPP_LOGIN_FORM_URL, CAPP_USER, CAPP_PASSWORD);
         LOGGER.info("START TESTS");
         //rt.run("Avis", "NL", "Aug25-Sep21_NL");
