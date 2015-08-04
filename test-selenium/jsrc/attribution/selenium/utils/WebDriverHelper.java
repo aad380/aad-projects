@@ -42,8 +42,9 @@ public class WebDriverHelper {
         WebElement e;
         e = waitForElement(By.cssSelector("a[href=\"/j_acegi_logout\"]"), 20);
         e.click();
-        driver_.close();
-        //driver_.quit();
+        sleepSeconds(2);
+        try { driver_.close(); } catch (Exception ex) {}
+        try { driver_.quit(); } catch (Exception ex) {}
     }
 
     public void selectJob (String client, String campaign, String subCampaign) {

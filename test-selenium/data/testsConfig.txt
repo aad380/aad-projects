@@ -1,4 +1,6 @@
-#Login|https://ec2-54-67-77-250.us-west-1.compute.amazonaws.com/login|alexander.dudarenko@abakus.me|welcome
-#SelectJob|Quantcast|Careers|Jul 01-Jul 31, 2014
+Login|https://ec2-54-67-77-250.us-west-1.compute.amazonaws.com/login|alexander.dudarenko@abakus.me|welcome
+SelectJob|Quantcast|Careers|Jul 01-Jul 31, 2014
 VerifyReport|Attribution Summary|AttributionSummary.data.txt
-#Logout
+VerifyReport|Player Attribution|PlayerAttribution.data.txt
+VerifyReport|Player Efficiency|PlayerEfficiency.data.txt
+Logout
