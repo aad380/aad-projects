@@ -33,7 +33,9 @@ import attribution.selenium.utils.WebDriverHelper;
 public class ReportingUiTester {
 
     private static final Logger LOGGER = Logger.getLogger(ReportingUiTester.class);
-    private static boolean useChrome_ = false;
+
+    private boolean useChrome_ = false;
+    private String chromeDriverPath_ = null;
 
     private WebDriver driver_;
     private WebDriverHelper helper_;
@@ -65,14 +67,31 @@ public class ReportingUiTester {
                     if (cols.length < 1) {
                         throw new RuntimeException("Incorrect line: " + line);
                     }
-                    steps_.addStep(new TestSteps.Step(cols[0], Arrays.copyOfRange(cols, 1, cols.length)));
+                    if ("Driver".equalsIgnoreCase(cols[0])) {
+                        if (cols.length < 2) {
+                            throw new RuntimeException("Driver - driver type (Firefox or Chrome) must be specified");
+                        }
+                        if ("Chrome".equalsIgnoreCase(cols[1])) {
+                            if (cols.length < 3) {
+                                throw new RuntimeException("Driver - driver executable must be specified for Chrome Driver");
+                            }
+                            useChrome_ = true;
+                            chromeDriverPath_ = cols[2];
+                        } else if ("Firefox".equalsIgnoreCase(cols[1])) {
+                            useChrome_ = false;
+                        } else {
+                            throw new RuntimeException("Driver - incorrect driver name <" + cols[1] + ">, should be Firefox or Chrome.");
+                        }
+                    } else {
+                        steps_.addStep(new TestSteps.Step(cols[0], Arrays.copyOfRange(cols, 1, cols.length)));
+                    }
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
             // init driver & helper
             if (useChrome_) {
-                System.setProperty("webdriver.chrome.driver", "C:/home/aad/workspace/aad-projects/test-selenium/bin/chromedriver.exe");
+                System.setProperty("webdriver.chrome.driver", chromeDriverPath_);
                 driver_ = new ChromeDriver();
             } else {
                 driver_ = new FirefoxDriver();
@@ -119,6 +138,7 @@ public class ReportingUiTester {
                     currentClient_ = args[0];
                     currentCampaign_ = args[1];
                     currentSubCampaign_ = args[2];
+                    LOGGER.info("SELECT-JOB: " + currentClient_ + "/" + currentCampaign_ + "/" + currentSubCampaign_);
                     helper_.selectJob(currentClient_, currentCampaign_, currentSubCampaign_);
                     break;
                 case "VerifyReport": {
@@ -139,6 +159,8 @@ public class ReportingUiTester {
                         checkPlayerAttribution(testParameters);
                     } else if ("PlayerEfficiency".equalsIgnoreCase(reportName)) {
                         checkPlayerEfficiency(testParameters);
+                    } else if ("PlayerComparison".equalsIgnoreCase(reportName)) {
+                        checkPlayerComparison(testParameters);
                     } else {
                         throw new RuntimeException ("VerifyReport - incorrect report name <" + reportName + ">");
                     }
@@ -209,8 +231,11 @@ public class ReportingUiTester {
         */
         LOGGER.info("REPORT-TEST: Player Attribution");
         // prepare example values
-        double correct_allPlayersTotal = rcd.getDoubleValue("allPlayersTotal");
-        // check report
+        String[] testdata_allPlayers = parseArrayParameter(rcd.getStringValue("allPlayers"));
+        if (testdata_allPlayers.length != 4) {
+            throw new RuntimeException("Incorrect test data: allPlayers=" + rcd.getStringValue("allPlayers"));
+        }
+        // table elements
         helper_.selectReport("Player Attribution", true);
         WebElement top_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollHeadInner table.dataTable"), 20);
         if (top_table == null) {
@@ -220,21 +245,157 @@ public class ReportingUiTester {
         if (bottom_table == null) {
             throw new NoSuchElementException("checkPlayerAttributionReport: cant't find bottom_table.");
         }
-        WebElement e = top_table.findElement(By.xpath(".//thead/tr[3]/td[2]"));
+        WebElement e;
+        //
+        // All Players
+        //
+        // allPlayers - Total 
+        e = top_table.findElement(By.xpath(".//thead/tr[3]/td[2]"));
         if (e == null) {
-            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find allPlayersTotal element.");
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find allPlayers-Total element.");
         }
-        double allPlayersTotal = helper_.getWebElementDouble(e);
-        if (allPlayersTotal != 211.0) {
-            throw new RuntimeException("checkPlayersAttributionReport: incorrect allPlayersTotal value.");
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[0])) {
+            throw new RuntimeException("checkPlayersAttributionReport: incorrect allPlayers-Total value.");
         }
+        // allPlayers - Upper Funnel 
+        e = top_table.findElement(By.xpath(".//thead/tr[3]/td[3]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find allPlayers-UpperFunnel element.");
+        }
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[1])) {
+            throw new RuntimeException("checkPlayersAttributionReport: incorrect allPlayers-UpperFunnel value.");
+        }
+        // allPlayers - Lower Funnel 
+        e = top_table.findElement(By.xpath(".//thead/tr[3]/td[4]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find allPlayers-LowerFunnel element.");
+        }
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[2])) {
+            throw new RuntimeException("checkPlayersAttributionReport: incorrect allPlayers-LowerFunnel value.");
+        }
+        // allPlayers - Percentage of Total
+        e = top_table.findElement(By.xpath(".//thead/tr[3]/td[5]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerAttributionReport: cant't find allPlayers-PercentageOfTotal element.");
+        }
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[3])) {
+            throw new RuntimeException("checkPlayersAttributionReport: incorrect allPlayers-PercentageOfTotal value.");
+        }
+        //
+        // other players
+        //
+        Map<String,String> bundle = rcd.getBoundle("player");
+        for (String playerName : bundle.keySet()) {
+            String[] playerData = parseArrayParameter(bundle.get(playerName));
+            WebElement rowElement = null;
+            for (WebElement tr : bottom_table.findElements(By.xpath(".//tbody/tr"))) {
+                WebElement nameElement = tr.findElement(By.xpath(".//td[1]"));
+                if (helper_.getWebElementText(nameElement).trim().equals(playerName)) {
+                    rowElement = tr;
+                    break;
+                }
+            }
+            if (rowElement == null) {
+                throw new RuntimeException("checkPlayersAttributionReport: can't find table row for player <" + playerName +">");
+            }
+            // player - Total 
+            e = rowElement.findElement(By.xpath(".//td[2]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerAttributionReport: cant't find <"+playerName+">-Total element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[0])) {
+                throw new RuntimeException("checkPlayersAttributionReport: incorrect <"+playerName+">-Total value.");
+            }
+            // player - Upper Funnel 
+            e = rowElement.findElement(By.xpath(".//td[3]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerAttributionReport: cant't find <"+playerName+">-UpperFunnel element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[1])) {
+                throw new RuntimeException("checkPlayersAttributionReport: incorrect <"+playerName+">-UpperFunnel value.");
+            }
+            // player - Lower Funnel 
+            e = rowElement.findElement(By.xpath(".//td[4]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerAttributionReport: cant't find <"+playerName+">-LowerFunnel element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[2])) {
+                throw new RuntimeException("checkPlayersAttributionReport: incorrect <"+playerName+">-LowerFunnel value.");
+            }
+            // player - Percentage of Total
+            e = rowElement.findElement(By.xpath(".//td[5]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerAttributionReport: cant't find <"+playerName+">-PercentageOfTotal element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[3])) {
+                throw new RuntimeException("checkPlayersAttributionReport: incorrect <"+playerName+">-PercentageOfTotal value.");
+            }
+        }
+        // done
         LOGGER.info("REPORT-OK: Player Attribution");
     }
 
     private void checkPlayerEfficiency (TestParameters rcd) {
         LOGGER.info("REPORT-TEST: Player Efficiency");
         helper_.selectReport("Player Efficiency", true);
+        // table elements
+        WebElement table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollBody table#table.dataTable"), 20);
+        if (table == null) {
+            throw new NoSuchElementException("checkPlayerEfficiencyReport: cant't find table.");
+        }
+        //
+        // check players
+        //
+        WebElement e;
+        Map<String,String> bundle = rcd.getBoundle("player");
+        for (String playerName : bundle.keySet()) {
+            String[] playerData = parseArrayParameter(bundle.get(playerName));
+            WebElement rowElement = null;
+            for (WebElement tr : table.findElements(By.xpath(".//tbody/tr"))) {
+                WebElement nameElement = tr.findElement(By.xpath(".//td[1]"));
+                if (helper_.getWebElementText(nameElement).trim().equals(playerName)) {
+                    rowElement = tr;
+                    break;
+                }
+            }
+            if (rowElement == null) {
+                throw new RuntimeException("checkPlayerEfficiencyReport: can't find table row for player <" + playerName +">");
+            }
+            // player - CPA 
+            e = rowElement.findElement(By.xpath(".//td[2]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerEfficiencyReport: cant't find <"+playerName+">-CPA element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[0])) {
+                throw new RuntimeException("checkPlayerEfficiencyReport: incorrect <"+playerName+">-CPA value.");
+            }
+            // player - Marketing Spend
+            e = rowElement.findElement(By.xpath(".//td[3]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerEfficiencyReport: cant't find <"+playerName+">-MarketingSpend element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[1])) {
+                throw new RuntimeException("checkPlayerEfficiencyReport: incorrect <"+playerName+">-MarketingSpend value.");
+            }
+            // player - Attributed Converters
+            e = rowElement.findElement(By.xpath(".//td[4]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerEfficiencyReport: cant't find <"+playerName+">-AttributedConverters element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[2])) {
+                throw new RuntimeException("checkPlayerEfficiencyReport: incorrect <"+playerName+">-AttributedConverters value.");
+            }
+        }
+        // done
         LOGGER.info("REPORT-OK: Player Efficiency");
+    }
+
+    private static String[] parseArrayParameter(String text) {
+        String[] array = text.split("\\|");
+        for (int i = 0; i < array.length; ++ i) {
+            array[i] = array[i].trim();
+        }
+        return array;
     }
 
     public static void main(String[] args) {

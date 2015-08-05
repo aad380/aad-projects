@@ -12,7 +12,7 @@ import java.util.Map;
  * User: Alexander Dudarenko
  * Date: 7/23/2015
  */
-public class TestParameters {
+class TestParameters {
 
     private Map<String, String> data_ = new HashMap<> ();
     private String fileName_;
@@ -27,7 +27,7 @@ public class TestParameters {
                 if (line.startsWith("#") || line.isEmpty()) {
                     continue;
                 }
-                String[] cols = line.split("\\s*[:=\\|]\\s*", 0);
+                String[] cols = line.split("\\s*[:=]\\s*", 0);
                 if (cols.length != 2) {
                     throw new RuntimeException("Incorrect report data file:  file=" + fileName_ + ", line=" + line);
                 }
@@ -78,6 +78,20 @@ public class TestParameters {
             throw new RuntimeException("Incorrect double value: file=" + fileName_ + ", key=" + key);
            
        }
+    }
+
+    public Map<String,String> getBoundle(String bundleName) {
+        if (!bundleName.endsWith(".")) {
+            bundleName = bundleName + ".";
+        }
+        Map<String,String> map = new HashMap<>();
+        for (Map.Entry<String, String> e : data_.entrySet()) {
+            if (e.getKey().startsWith(bundleName)) {
+                String key = e.getKey().substring(bundleName.length());
+                map.put(key, e.getValue());
+            }
+        }
+        return map;
     }
 
 }

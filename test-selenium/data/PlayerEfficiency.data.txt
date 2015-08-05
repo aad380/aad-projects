@@ -1,2 +1,5 @@
-dummy: 12345
+#Player Name: CPA|Marketing Spend|Attributed Converters
+player.Prospecting Only: 4|24%|47%
+player.Full Funnel:      6|48%|52%
+player.Retargeting Only: 201|27%|0.9%
 

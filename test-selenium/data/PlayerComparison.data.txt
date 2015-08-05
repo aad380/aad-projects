@@ -1,0 +1,5 @@
+#Player Name: CPA|Exposed Converters|Attributed Converters
+allPlayers: 7|447|211
+Prospecting Only: 4|137|100
+Full Funnel: 6|305|110
+Retargeting Only: 201|189|2

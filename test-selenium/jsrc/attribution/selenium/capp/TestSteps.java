@@ -9,7 +9,7 @@ import java.util.List;
  * User: Alexander Dudarenko
  * Date: 8/3/2015
  */
-public class TestSteps implements Iterable<TestSteps.Step> {
+class TestSteps implements Iterable<TestSteps.Step> {
     
     public static class Step {
 

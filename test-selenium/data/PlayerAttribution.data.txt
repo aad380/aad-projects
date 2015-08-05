@@ -1,1 +1,5 @@
-allPlayersTotal: 211.0
+#Player Name: Total|Upper Funnel|Lower Funnel|Percentage of Total
+allPlayers: 211|211|0.5|100%
+player.Full Funnel: 110|110|-|52%
+player.Prospecting Only: 100|99|0.5|47%
+player.Retargeting Only: 2|2|-|0.9%
