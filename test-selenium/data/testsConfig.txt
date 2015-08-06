@@ -6,5 +6,8 @@ SelectJob|Quantcast|Careers|Jul 01-Jul 31, 2014
 #VerifyReport|Attribution Summary|AttributionSummary.data.txt
 #VerifyReport|Player Attribution|PlayerAttribution.data.txt
 #VerifyReport|Player Efficiency|PlayerEfficiency.data.txt
-VerifyReport|Player Comparison|PlayerComparison.data.txt
+#VerifyReport|Player Comparison|PlayerComparison.data.txt
+#VerifyReport|Player Summary|PlayerSummary.data.txt
+VerifyReport|Event Comparison|EventComparison.data.txt
+
 Logout

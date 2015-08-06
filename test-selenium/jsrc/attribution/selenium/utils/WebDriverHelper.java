@@ -123,7 +123,7 @@ public class WebDriverHelper {
     }
 
     public void selectReport (String reportName,  boolean waitLoading) {
-        reportName = reportName.trim();
+        reportName = trim(reportName);
         WebElement e;
         LOGGER.debug("CHECK FOR REPORT: " + reportName);
         e = waitForElementByText(By.cssSelector("nav#mainnav li.hasSub.ng-scope span.txt"), 100, reportName);
@@ -132,7 +132,7 @@ public class WebDriverHelper {
         WebElement menuItem = null;
         LOOP: for (WebElement li : driver_.findElements(By.cssSelector("nav#mainnav li.hasSub.ng-scope"))) {
             for (WebElement span : li.findElements(By.cssSelector("span.txt"))) {
-                if (reportName.equalsIgnoreCase(getWebElementText(span).trim())) {
+                if (reportName.equalsIgnoreCase(trim(getWebElementText(span)))) {
                     menuGroup = li;
                     menuItem = span;
                     break LOOP;
@@ -190,7 +190,7 @@ public class WebDriverHelper {
     }
 
     public WebElement waitForElementByText(By by, int seconds, String text) {
-        text = text.trim().toUpperCase();
+        text = trim(text).toUpperCase();
         do {
             try {
                 List<WebElement> l = driver_.findElements(by);
@@ -200,7 +200,7 @@ public class WebDriverHelper {
                     if (elementText == null || elementText.isEmpty()) {
                         elementText = e.getAttribute("innerHTML");
                     }
-                    elementText = elementText.trim();
+                    elementText = trim(elementText);
                     LOGGER.debug("waitByText: <" +by+ "> <" + elementText + ">");
                     if (text.equals(elementText.toUpperCase())) {
                         LOGGER.debug("   OK");
@@ -227,17 +227,17 @@ public class WebDriverHelper {
     }
 
     public int getWebElementInteger(WebElement e) {
-        String text = getWebElementText(e).trim().replaceAll(",", "");
+        String text = trim(getWebElementText(e)).replaceAll(",", "");
         return Integer.parseInt(text);
     }
 
     public long getWebElementLong(WebElement e) {
-        String text = getWebElementText(e).trim().replaceAll(",", "");
+        String text = trim(getWebElementText(e)).replaceAll(",", "");
         return Long.parseLong(text);
     }
 
     public double getWebElementDouble(WebElement e) {
-        String text = getWebElementText(e).trim().replaceAll(",", "");
+        String text = trim(getWebElementText(e)).replaceAll(",", "");
         return Double.parseDouble(text);
     }
 
@@ -301,8 +301,12 @@ public class WebDriverHelper {
         }
     }
 
-    public void sleepSeconds (int seconds) {
+    public static void sleepSeconds (int seconds) {
         try {Thread.sleep(1000L * seconds);} catch (InterruptedException ex) {};
+    }
+
+    public static String trim(String txt) {
+        return txt.replace('\u00A0', ' ').trim();
     }
 
 }

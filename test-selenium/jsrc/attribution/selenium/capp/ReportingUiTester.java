@@ -7,23 +7,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
 import attribution.selenium.utils.WebDriverHelper;
+import static attribution.selenium.utils.WebDriverHelper.trim;
 
 /**
  * Copyright (c) 2013-2015 Abakus, Inc. All rights reserved.
@@ -96,6 +95,8 @@ public class ReportingUiTester {
             } else {
                 driver_ = new FirefoxDriver();
             }
+            driver_.manage().window().setPosition(new Point(0,0));
+            driver_.manage().window().setSize(new Dimension(1550, 850));
             helper_ = new WebDriverHelper(driver_);
         } catch (Exception ex) {
             LOGGER.error(ex, ex);
@@ -161,6 +162,10 @@ public class ReportingUiTester {
                         checkPlayerEfficiency(testParameters);
                     } else if ("PlayerComparison".equalsIgnoreCase(reportName)) {
                         checkPlayerComparison(testParameters);
+                    } else if ("PlayerSummary".equalsIgnoreCase(reportName)) {
+                        checkPlayerSummary(testParameters);
+                    } else if ("EventComparison".equalsIgnoreCase(reportName)) {
+                        checkEventComparison(testParameters);
                     } else {
                         throw new RuntimeException ("VerifyReport - incorrect report name <" + reportName + ">");
                     }
@@ -389,6 +394,206 @@ public class ReportingUiTester {
         // done
         LOGGER.info("REPORT-OK: Player Efficiency");
     }
+
+    private void checkPlayerComparison (TestParameters rcd) {
+        LOGGER.info("REPORT-TEST: Player Comparison");
+        // prepare example values
+        String[] testdata_allPlayers = parseArrayParameter(rcd.getStringValue("allPlayers"));
+        if (testdata_allPlayers.length != 3) {
+            throw new RuntimeException("Incorrect test data: allPlayers=" + rcd.getStringValue("allPlayers"));
+        }
+        // table elements
+        helper_.selectReport("Player Comparison", true);
+        WebElement top_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollHeadInner table.dataTable"), 20);
+        if (top_table == null) {
+            throw new NoSuchElementException("checkPlayerComparisonReport: cant't find top_table.");
+        }
+        WebElement bottom_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollBody table.dataTable"), 20);
+        if (bottom_table == null) {
+            throw new NoSuchElementException("checkPlayerComparisonReport: cant't find bottom_table.");
+        }
+        WebElement e;
+        //
+        // All Players
+        //
+        // allPlayers - CPA
+        e = top_table.findElement(By.xpath(".//thead/tr[2]/td[2]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerComparisonReport: cant't find allPlayers-CPA element.");
+        }
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[0])) {
+            throw new RuntimeException("checkPlayersComparisonReport: incorrect allPlayers-CPA value.");
+        }
+        // allPlayers - Exposed Converters
+        e = top_table.findElement(By.xpath(".//thead/tr[2]/td[3]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerComparisonReport: cant't find allPlayers-ExposedConverters element.");
+        }
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[1])) {
+            throw new RuntimeException("checkPlayersComparisonReport: incorrect allPlayers-ExposedConverters value.");
+        }
+        // allPlayers - Attributed Converters
+        e = top_table.findElement(By.xpath(".//thead/tr[2]/td[4]"));
+        if (e == null) {
+            throw new NoSuchElementException("checkPlayerComparisonReport: cant't find allPlayers-AttributedConverters element.");
+        }
+        if (!helper_.getWebElementText(e).trim().equals(testdata_allPlayers[2])) {
+            throw new RuntimeException("checkPlayersComparisonReport: incorrect allPlayers-AttributedConverters value.");
+        }
+        //
+        // other players
+        //
+        Map<String,String> bundle = rcd.getBoundle("player");
+        for (String playerName : bundle.keySet()) {
+            String[] playerData = parseArrayParameter(bundle.get(playerName));
+            WebElement rowElement = null;
+            for (WebElement tr : bottom_table.findElements(By.xpath(".//tbody/tr"))) {
+                WebElement nameElement = tr.findElement(By.xpath(".//td[1]"));
+                if (helper_.getWebElementText(nameElement).trim().equals(playerName)) {
+                    rowElement = tr;
+                    break;
+                }
+            }
+            if (rowElement == null) {
+                throw new RuntimeException("checkPlayersComparisonReport: can't find table row for player <" + playerName +">");
+            }
+            // player - CPA 
+            e = rowElement.findElement(By.xpath(".//td[2]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerComparisonReport: cant't find <"+playerName+">-CPA element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[0])) {
+                throw new RuntimeException("checkPlayersComparisonReport: incorrect <"+playerName+">-CPA value.");
+            }
+            // player - Exposed Converters
+            e = rowElement.findElement(By.xpath(".//td[3]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerComparisonReport: cant't find <"+playerName+">-ExposedConverters element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[1])) {
+                throw new RuntimeException("checkPlayersComparisonReport: incorrect <"+playerName+">-ExposedConverters value.");
+            }
+            // player - Attributed Converters
+            e = rowElement.findElement(By.xpath(".//td[4]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerComparisonReport: cant't find <"+playerName+">-AttributedConverters element.");
+            }
+            if (!helper_.getWebElementText(e).trim().equals(playerData[2])) {
+                throw new RuntimeException("checkPlayersComparisonReport: incorrect <"+playerName+">-AttributedConverters value.");
+            }
+        }
+        // done
+        LOGGER.info("REPORT-OK: Player Comparison");
+    }
+
+    private void checkPlayerSummary (TestParameters rcd) {
+        LOGGER.info("REPORT-TEST: Player Summary");
+        // prepare example values
+        String[] testdata_allPlayers = parseArrayParameter(rcd.getStringValue("allPlayers"));
+        // table elements
+        helper_.selectReport("Player Summary", true);
+        WebElement top_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollHeadInner table.dataTable"), 20);
+        if (top_table == null) {
+            throw new NoSuchElementException("checkPlayerSummaryReport: cant't find top_table.");
+        }
+        WebElement bottom_table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollBody table.dataTable"), 20);
+        if (bottom_table == null) {
+            throw new NoSuchElementException("checkPlayerSummaryReport: cant't find bottom_table.");
+        }
+        WebElement e;
+        //
+        // All Players
+        //
+        for (int i = 0; i < testdata_allPlayers.length; ++ i) {
+            int columnNumber = 2 + i;
+            e = top_table.findElement(By.xpath(".//thead/tr[3]/td[" + columnNumber + "]"));
+            if (e == null) {
+                throw new NoSuchElementException("checkPlayerSummaryReport: cant't find allPlayers["+i+"] element.");
+            }
+            String cellValue = trim(helper_.getWebElementText(e));
+            String neededValue = testdata_allPlayers[i];
+            if (!neededValue.equals(cellValue)) {
+                throw new RuntimeException("checkPlayersSummaryReport: incorrect allPlayers["+i+"] value. Cell value <"+cellValue+"> != needed value <"+neededValue+">");
+            }
+        }
+        //
+        // other players
+        //
+        Map<String,String> bundle = rcd.getBoundle("player");
+        for (String playerName : bundle.keySet()) {
+            String[] playerData = parseArrayParameter(bundle.get(playerName));
+            WebElement rowElement = null;
+            for (WebElement tr : bottom_table.findElements(By.xpath(".//tbody/tr"))) {
+                WebElement nameElement = tr.findElement(By.xpath(".//td[1]"));
+                if (helper_.getWebElementText(nameElement).trim().equals(playerName)) {
+                    rowElement = tr;
+                    break;
+                }
+            }
+            if (rowElement == null) {
+                throw new RuntimeException("checkPlayersSummaryReport: can't find table row for player <" + playerName +">");
+            }
+            for (int i = 0; i < playerData.length; ++ i) {
+                int columnNumber = 2 + i;
+                e = rowElement.findElement(By.xpath(".//td[" + columnNumber + "]"));
+                if (e == null) {
+                    throw new NoSuchElementException("checkPlayerSummaryReport: cant't find \""+playerName+"\"["+i+"] element.");
+                }
+                String cellValue = trim(helper_.getWebElementText(e));
+                String neededValue = playerData[i];
+                if (!neededValue.equals(cellValue)) {
+                    throw new RuntimeException("checkPlayersSummaryReport: incorrect \""+playerName+"\"["+i+"] value. Cell value <"+cellValue+"> != needed value <"+neededValue+">");
+                }
+            }
+        }
+        // done
+        LOGGER.info("REPORT-OK: Player Summary");
+    }
+
+    private void checkEventComparison (TestParameters rcd) {
+        LOGGER.info("REPORT-TEST: Event Comparison");
+        // table elements
+        helper_.selectReport("Event Comparison", true);
+        WebElement table = helper_.waitForElement(By.cssSelector("div#table_wrapper div.dataTables_scrollBody table.dataTable"), 20);
+        if (table == null) {
+            throw new NoSuchElementException("checkEventComparisonReport: cant't find top_table.");
+        }
+        //
+        // other players
+        //
+        WebElement e;
+        Map<String,String> bundle = rcd.getBoundle("player");
+        for (String playerName : bundle.keySet()) {
+            String[] playerData = parseArrayParameter(bundle.get(playerName));
+            WebElement rowElement = null;
+            for (WebElement tr : table.findElements(By.xpath(".//tbody/tr"))) {
+                WebElement nameElement = tr.findElement(By.xpath(".//td[1]"));
+                if (helper_.getWebElementText(nameElement).trim().equals(playerName)) {
+                    rowElement = tr;
+                    break;
+                }
+            }
+            if (rowElement == null) {
+                throw new RuntimeException("checkPlayersComparisonReport: can't find table row for player <" + playerName +">");
+            }
+            for (int i = 0; i < playerData.length; ++ i) {
+                int columnNumber = 2 + i;
+                e = rowElement.findElement(By.xpath(".//td[" + columnNumber + "]"));
+                if (e == null) {
+                    throw new NoSuchElementException("checkEventComparisonReport: cant't find \""+playerName+"\"["+i+"] element.");
+                }
+                String cellValue = trim(helper_.getWebElementText(e));
+                String neededValue = playerData[i];
+                if (!neededValue.equals(cellValue)) {
+                    throw new RuntimeException("checkEventComparisonReport: incorrect \""+playerName+"\"["+i+"] value. Cell value <"+cellValue+"> != needed value <"+neededValue+">");
+                }
+            }
+        }
+        // done
+        LOGGER.info("REPORT-OK: Event Comparison");
+    }
+
+//System.err.println("<"+helper_.getWebElementText(e).trim() + "><" + playerData[0] +">");
 
     private static String[] parseArrayParameter(String text) {
         String[] array = text.split("\\|");
