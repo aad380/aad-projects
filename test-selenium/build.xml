@@ -44,7 +44,19 @@
     </target>
 
     <target name="jar" depends="compile">
-        <jar destfile="dist/ui-tests.jar" basedir="build/classes"/>
+        <jar destfile="dist/capp-verifier.jar" basedir="build/classes"/>
+    </target>
+
+    <target name="run" depends="compile">
+       <java classname="attribution.selenium.capp.ReportingUiTester">
+         <arg value="./data/testsConfig.txt"/>
+         <classpath>
+           <!--pathelement location="dist/test.jar"/-->
+           <pathelement path="./build/classes"/>
+           <pathelement path="${java.class.path}"/>
+         </classpath>
+         <classpath refid="compile.classpath"/>
+       </java>
     </target>
 
     <target name="compile-tests" depends="init">

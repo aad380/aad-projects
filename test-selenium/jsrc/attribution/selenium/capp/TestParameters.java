@@ -12,7 +12,7 @@ import java.util.Map;
  * User: Alexander Dudarenko
  * Date: 7/23/2015
  */
-class TestParameters {
+public class TestParameters {
 
     private Map<String, String> data_ = new HashMap<> ();
     private String fileName_;
