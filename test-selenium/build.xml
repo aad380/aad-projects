@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<project name="selenium" default="jar">	
+<project name="verifier" default="jar">	
 
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.7"/>
