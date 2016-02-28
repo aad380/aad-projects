@@ -4,7 +4,12 @@
 .settings/
 .classpath
 .project
-.build/
 #
+# Idea files
 #
 .idea
+**/*iml
+
+**/.build/
+**/build/
+**/out/
