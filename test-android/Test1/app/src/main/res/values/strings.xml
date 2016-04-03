@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Test1</string>
+    <string name="about_title">О программе</string>
+    <string name="aboutText">Київ ЄєЇїІі₴\n
+    вавапвпвпвап\n
+    пвапвапвпапваьв ап в\n
+    в п вп вп ва</string>
+    <string name="title_activity_second">SecondActivity</string>
+</resources>
